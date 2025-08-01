@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="wiki-container">
+    <div class="wiki-header">
+        <h1>{{ wiki.title }}</h1>
+        <div class="wiki-meta">
+            <span>Author: {{ wiki.author.username }}</span>
+            <span>Posted: {{ wiki.date_posted.strftime('%Y-%m-%d') }}</span>
+            <span>Category: {{ wiki.category }}</span>
+            <span>Water Scarcity Level: {{ wiki.water_scarcity_level }}</span>
+        </div>
+        {% if current_user.is_authenticated and current_user == wiki.author %}
+        <div class="wiki-actions">
+            <a href="{{ url_for('edit_wiki', wiki_id=wiki.id) }}" class="edit-button">Edit Wiki</a>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="wiki-content">
+        {{ wiki.content|safe }}
+    </div>
+
+    {% if wiki.media_files %}
+    <div class="wiki-media-gallery">
+        {% for media in wiki.media_files %}
+            <div class="media-item">
+                {% if media.file_type == 'image' %}
+                    <img src="{{ url_for('static', filename='uploads/' + media.filename) }}" alt="Wiki image">
+                {% else %}
+                    <video controls>
+                        <source src="{{ url_for('static', filename='uploads/' + media.filename) }}" type="video/{{ media.filename.split('.')[-1] }}">
+                        Your browser does not support the video tag.
+                    </video>
+                {% endif %}
+            </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block head %}
+<script>
+function getLocation() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(position) {
+            document.getElementById('latitude').value = position.coords.latitude;
+            document.getElementById('longitude').value = position.coords.longitude;
+            document.getElementById('use_location').value = 'true';
+            document.getElementById('search-form').submit();
+        });
+    } else {
+        alert('Geolocation is not supported by this browser.');
+    }
+}
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="home-container">
+    <h1>Welcome to Water Scarcity Wiki</h1>
+    <p class="intro">A collaborative platform for sharing knowledge about water scarcity issues and solutions.</p>
+
+    <div class="search-container">
+        <form id="search-form" action="{{ url_for('search') }}" method="get" class="search-form">
+            <input type="text" name="query" placeholder="Search wikis..." value="{{ search_query if search_query }}">
+            <input type="hidden" name="latitude" id="latitude">
+            <input type="hidden" name="longitude" id="longitude">
+            <input type="hidden" name="use_location" id="use_location" value="false">
+            <div class="category-filters">
+                <select name="category" id="category">
+                    <option value="">All Categories</option>
+                    <option value="agriculture" {% if category == 'agriculture' %}selected{% endif %}>Agriculture</option>
+                    <option value="domestic" {% if category == 'domestic' %}selected{% endif %}>Domestic</option>
+                    <option value="business" {% if category == 'business' %}selected{% endif %}>Business</option>
+                </select>
+            </div>
+            <button type="submit">Search</button>
+            <button type="button" onclick="getLocation()">Filter by Location</button>
+        </form>
+        {% if water_level is defined %}
+            <p class="water-level-info">Water level (mgbl) at Your Location: {{ water_level }} meters</p>
+        {% endif %}
+    </div>
+
+    {% if current_user.is_authenticated %}
+        <div class="create-wiki-prompt">
+            <a href="{{ url_for('create_wiki') }}" class="create-button">Create New Wiki</a>
+        </div>
+    {% endif %}
+
+    <div class="wiki-list">
+        {% if wikis %}
+            {% for wiki in wikis %}
+                <div class="wiki-card">
+                    <h2><a href="{{ url_for('view_wiki', wiki_id=wiki.id) }}">{{ wiki.title }}</a></h2>
+                    <div class="wiki-meta">
+                        <span>Author: {{ wiki.author.username }}</span>
+                        <span>Posted: {{ wiki.date_posted.strftime('%Y-%m-%d') }}</span>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p class="no-wikis">No wiki entries yet. Be the first to contribute!</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block head %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.7.2/tinymce.min.js" referrerpolicy="origin"></script>
+<script src="{{ url_for('static', filename='wiki-editor.js') }}"></script>
+<script>document.addEventListener('DOMContentLoaded', function() { initializeEditor(); });</script>
+{% endblock %}
+
+{% block content %}
+<div class="wiki-form-container">
+    <h1>{% if wiki %}Edit{% else %}Create{% endif %} Wiki</h1>
+    <form method="POST" class="wiki-form" enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="form-group">
+            <label for="title">Title</label>
+            <input type="text" id="title" name="title" value="{{ wiki.title if wiki else '' }}" required>
+        </div>
+        <div class="form-group">
+            <label for="content">Content</label>
+            <textarea id="content" name="content" class="tinymce-editor" required>{{ wiki.content if wiki else '' }}</textarea>
+        </div>
+        <div class="form-group">
+            <label for="water_scarcity_level">Water Scarcity Level</label>
+            <select id="water_scarcity_level" name="water_scarcity_level" required>
+                <option value="" disabled selected>Select water scarcity level</option>
+                <option value="low" {% if wiki and wiki.water_scarcity_level == 'low' %}selected{% endif %}>Low (0-5)</option>
+                <option value="moderate" {% if wiki and wiki.water_scarcity_level == 'moderate' %}selected{% endif %}>Moderate (5-10)</option>
+                <option value="high" {% if wiki and wiki.water_scarcity_level == 'high' %}selected{% endif %}>High (>10)</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="category">Water Usage Category</label>
+            <select id="category" name="category" required>
+                <option value="" disabled selected>Select water usage category</option>
+                <option value="agriculture" {% if wiki and wiki.category == 'agriculture' %}selected{% endif %}>Agriculture</option>
+                <option value="domestic" {% if wiki and wiki.category == 'domestic' %}selected{% endif %}>Domestic</option>
+                <option value="business" {% if wiki and wiki.category == 'business' %}selected{% endif %}>Business</option>
+            </select>
+        </div>
+        {% if wiki and wiki.media_files %}
+        <div class="current-media">
+            <h3>Current Media Files</h3>
+            {% for media in wiki.media_files %}
+                <div class="media-item">
+                    {% if media.file_type == 'image' %}
+                        <img src="{{ url_for('static', filename='uploads/' + media.filename) }}" alt="Wiki image">
+                    {% else %}
+                        <video controls>
+                            <source src="{{ url_for('static', filename='uploads/' + media.filename) }}" type="video/{{ media.filename.split('.')[-1] }}">
+                            Your browser does not support the video tag.
+                        </video>
+                    {% endif %}
+                    <div class="media-controls">
+                        <label>
+                            <input type="checkbox" name="delete_media" value="{{ media.id }}">
+                            Delete this file
+                        </label>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        <div class="form-group">
+            <label for="media">Upload New Media Files</label>
+            <input type="file" id="media" name="media" multiple accept="image/*,video/*">
+        </div>
+        <button type="submit" class="wiki-button">{% if wiki %}Update{% else %}Create{% endif %} Wiki</button>
+    </form>
+</div>
+{% endblock %}
